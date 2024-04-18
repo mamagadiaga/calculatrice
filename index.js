@@ -1,80 +1,91 @@
-$(function() {
-  let headerElem = $('header');
-  let logo = $('#logo');
-  let navMenu = $('#nav-menu');
-  let navToggle = $('#nav-toggle');
-  $('#properties-slider').slick({
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    prevArrow: '<a href="#" class="slick-arrow slick-prev">previous</a>',
-    nextArrow: '<a href="#" class="slick-arrow slick-next">next</a>',
-    responsive: [{
-        breakpoint: 1100,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-          infinite: true,
-        }
-      },
-      {
-        breakpoint: 767,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          infinite: true,
-        }
-      },
-      {
-        breakpoint: 530,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          infinite: true,
-        }
-      }
-    ]
+const quizData = [
+  {
+    question: "Quelle est la capitale de la France ?",
+    options: ["Paris", "Londres", "Berlin", "Rome"],
+    answer: 0
+  },
+  {
+    question: "Quelle est la plus grande planète du système solaire ?",
+    options: ["Terre", "Mars", "Jupiter", "Saturne"],
+    answer: 2
+  },
+  // Ajoutez plus de questions ici
+];
+
+const quizContainer = document.querySelector('.quiz-container');
+const questionElement = document.getElementById('question');
+const optionsElement = document.getElementById('options');
+const prevButton = document.getElementById('prev-btn');
+const nextButton = document.getElementById('next-btn');
+const feedbackElement = document.getElementById('feedback');
+const scoreElement = document.getElementById('score');
+const timerElement = document.getElementById('timer');
+
+let currentQuestion = 0;
+let score = 0;
+let timer;
+
+function displayQuestion(questionIndex) {
+  const currentQuizQuestion = quizData[questionIndex];
+  questionElement.textContent = currentQuizQuestion.question;
+
+  optionsElement.innerHTML = '';
+  currentQuizQuestion.options.forEach((option, index) => {
+    const optionElement = document.createElement('button');
+    optionElement.textContent = option;
+    optionElement.addEventListener('click', () => checkAnswer(index));
+    optionsElement.appendChild(optionElement);
   });
-  $('#testimonials-slider').slick({
-    infinite: true,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    prevArrow: '<a href="#" class="slick-arrow slick-prev"><</a>',
-    nextArrow: '<a href="#" class="slick-arrow slick-next">></a>'
-  });
-  navToggle.on('click', () => {
-    navMenu.css('right', '0');
-  });
-  $('#close-flyout').on('click', () => {
-    navMenu.css('right', '-100%');
-  });
-  $(document).on('click', (e) => {
-    let target = $(e.target);
-    if (!(target.closest('#nav-toggle').length > 0 || target.closest('#nav-menu').length > 0)) {
-      navMenu.css('right', '-100%');
+}
+
+function checkAnswer(userAnswer) {
+  if (userAnswer === quizData[currentQuestion].answer) {
+    score++;
+    feedbackElement.textContent = "Bonne réponse!";
+  } else {
+    feedbackElement.textContent = "Mauvaise réponse.";
+  }
+  displayNextQuestion();
+}
+
+function displayNextQuestion() {
+  currentQuestion++;
+  if (currentQuestion < quizData.length) {
+    displayQuestion(currentQuestion);
+  } else {
+    endQuiz();
+  }
+}
+
+function displayPrevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    displayQuestion(currentQuestion);
+  }
+}
+
+function endQuiz() {
+  clearInterval(timer);
+  questionElement.textContent = "Fin du quiz!";
+  optionsElement.innerHTML = '';
+  feedbackElement.textContent = '';
+  scoreElement.textContent = `Score final: ${score}/${quizData.length}`;
+}
+
+function startTimer(duration) {
+  let time = duration;
+  timer = setInterval(() => {
+    timerElement.textContent = `Temps restant: ${time}s`;
+    time--;
+    if (time < 0) {
+      clearInterval(timer);
+      endQuiz();
     }
-  });
-  $(document).scroll(() => {
-    let scrollTop = $(document).scrollTop();
-    if (scrollTop > 0) {
-      navMenu.addClass('is-sticky');
-      logo.css('color', '#000');
-      headerElem.css('background', '#fff');
-      navToggle.css('border-color', '#000');
-      navToggle.find('.strip').css('background-color', '#000');
-    } else {
-      navMenu.removeClass('is-sticky');
-      logo.css('color', '#fff');
-      headerElem.css('background', 'transparent');
-      navToggle.css('bordre-color', '#fff');
-      navToggle.find('.strip').css('background-color', '#fff');
-    }
-    headerElem.css(scrollTop >= 200 ? {
-      'padding': '0.5rem',
-      'box-shadow': '0 -4px 10px 1px #999'
-    } : {
-      'padding': '1rem 0',
-      'box-shadow': 'none'
-    });
-  });
-  $(document).trigger('scroll');
-});
+  }, 1000);
+}
+
+displayQuestion(currentQuestion);
+startTimer(60); // 60 secondes pour répondre à chaque question
+
+prevButton.addEventListener('click', displayPrevQuestion);
+nextButton.addEventListener('click', displayNextQuestion);
